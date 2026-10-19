@@ -2,7 +2,7 @@ name: CI-CD appKantin
 
 on:
   push:
-    branches: [main, test/php-lint-gate]
+    branches: [main]
 
 jobs:
   build:
@@ -26,7 +26,6 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build dan Push Image
-        if: github.ref == 'refs/heads/main'
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -36,7 +35,6 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/appkantin:${{ github.sha }}
 
   deploy:
-    if: github.ref == 'refs/heads/main'
     needs: build
     runs-on: [self-hosted, swarm-manager]
     steps:

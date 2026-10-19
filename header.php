@@ -1,6 +1,4 @@
 <?php
-// Deliberate syntax error for LKPD 9 Tugas 3 - Quality Gate Test
-$syntax_error_gate_test = "missing semicolon on purpose"
 // Cegah cache: info server harus selalu berasal dari request yang baru
 if (!headers_sent()) {
     header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
