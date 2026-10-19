@@ -1,0 +1,52 @@
+name: CI-CD appKantin
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: [self-hosted, swarm-manager]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cek sintaks PHP
+        run: |
+          for f in $(find . -name '*.php'); do
+            php -l "$f" || exit 1
+          done
+
+      - name: Login ke Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build dan Push Image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/appkantin:latest
+            ${{ secrets.DOCKERHUB_USERNAME }}/appkantin:${{ github.sha }}
+
+  deploy:
+    needs: build
+    runs-on: [self-hosted, swarm-manager]
+    steps:
+      - name: Rolling Update Service Swarm
+        run: |
+          if docker service inspect kantin >/dev/null 2>&1; then
+            echo "Memperbarui service kantin dengan rolling update..."
+            docker service update \
+              --image ${{ secrets.DOCKERHUB_USERNAME }}/appkantin:${{ github.sha }} \
+              --update-parallelism 1 --update-delay 10s \
+              kantin
+          else
+            echo "Membuat service kantin awal 3 replika dengan Docker config..."
+            docker service create --name kantin \
+              --replicas 3 -p 8080:8080 \
+              --config source=kantin_db_php,target=/var/www/html/config/db.php \
+              ${{ secrets.DOCKERHUB_USERNAME }}/appkantin:${{ github.sha }}
+          fi
