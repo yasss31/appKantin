@@ -1,4 +1,6 @@
 <?php
+// Deliberate syntax error for LKPD 9 Tugas 2
+$syntax_error_test = "broken syntax without semicolon"
 // Cegah cache: info server harus selalu berasal dari request yang baru
 if (!headers_sent()) {
     header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
